@@ -25,7 +25,7 @@ cities = {
 sessionStorage = {}
 
 
-@app.route('/post', methods=['POST'])
+@app.route('/', methods=['POST'])
 def main():
     logging.info(f'Request: {request.json!r}')
     response = {
