@@ -144,7 +144,7 @@ def play_game(res, req):
 
         elif state == 'find_country':
             country = sessionStorage[user_id]['country']
-
+            state = 'find_city'
             if country == get_country_from_req(req):
                 msg = 'Правильно! Сыграем ещё?'
             else:
