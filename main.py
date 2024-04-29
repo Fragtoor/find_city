@@ -148,7 +148,7 @@ def play_game(res, req):
             if country.lower().strip() == get_country_from_req(req).lower().strip():
                 msg = 'Правильно! Сыграем ещё?'
             else:
-                msg = f'Неправильно, это {country}. "{get_country_from_req(req)}"Сыграем ещё?'
+                msg = f'Неправильно, это {country}. Сыграем ещё?'
 
             res['response']['text'] = msg
             res['response']['buttons'] = [
