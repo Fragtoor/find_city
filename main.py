@@ -141,10 +141,6 @@ def play_game(res, req):
                 {
                     'title': 'Нет',
                     'hide': True
-                },
-                {
-                    'title': 'Помощь',
-                    'hide': True
                 }
             ]
             sessionStorage[user_id]['guessed_cities'].append(city)
@@ -165,10 +161,6 @@ def play_game(res, req):
                     },
                     {
                         'title': 'Нет',
-                        'hide': True
-                    },
-                    {
-                        'title': 'Помощь',
                         'hide': True
                     }
                 ]
