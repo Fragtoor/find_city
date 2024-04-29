@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 import logging
 import random
+import requests
 
 app = Flask(__name__)
 
@@ -85,7 +86,7 @@ def handle_dialog(res, req):
             elif 'нет' in req['request']['nlu']['tokens']:
                 res['response']['text'] = 'Ну и ладно!'
                 res['end_session'] = True
-            elif 'Покажи город на карте' not in req['request']['nlu']['tokens']:
+            else:
                 res['response']['text'] = 'Не поняла ответа! Так да или нет?'
                 res['response']['buttons'] = [
                     {
@@ -101,7 +102,11 @@ def handle_dialog(res, req):
             play_game(res, req)
 
 
+state = 'find_city'
+
+
 def play_game(res, req):
+    global state
     user_id = req['session']['user_id']
     attempt = sessionStorage[user_id]['attempt']
     if req['request']['original_utterance'].lower() == 'помощь':
@@ -128,11 +133,24 @@ def play_game(res, req):
     else:
         # сюда попадаем, если попытка отгадать не первая
         city = sessionStorage[user_id]['city']
+
         # проверяем есть ли правильный ответ в сообщение
-        if get_city(req) == city:
-            # если да, то добавляем город к sessionStorage[user_id]['guessed_cities'] и
-            # отправляем пользователя на второй круг. Обратите внимание на этот шаг на схеме.
-            res['response']['text'] = 'Правильно! Сыграем ещё?'
+        if state == 'find_city' and get_city(req) == city:
+            country = get_country(city)
+            sessionStorage[user_id]['country'] = country
+            res['response']['text'] = 'Правильно, а в какой стране этот город?'
+            state = 'find_country'
+            return
+
+        elif state == 'find_country':
+            country = sessionStorage[user_id]['country']
+
+            if country == get_country_from_req(req):
+                msg = 'Правильно! Сыграем ещё?'
+            else:
+                msg = f'Неправильно, это {country}. Сыграем ещё?'
+
+            res['response']['text'] = msg
             res['response']['buttons'] = [
                 {
                     'title': 'Да',
@@ -151,6 +169,7 @@ def play_game(res, req):
             sessionStorage[user_id]['guessed_cities'].append(city)
             sessionStorage[user_id]['game_started'] = False
             return
+
         else:
             # если нет
             if attempt == 3:
@@ -198,6 +217,15 @@ def get_city(req):
             return entity['value'].get('city', None)
 
 
+def get_country_from_req(req):
+    # перебираем именованные сущности
+    for entity in req['request']['nlu']['entities']:
+        # если тип YANDEX.GEO
+        if entity['type'] == 'YANDEX.GEO':
+            # возвращаем None, если не нашли сущности с типом YANDEX.GEO
+            return entity['value'].get('country', None)
+
+
 def get_first_name(req):
     # перебираем сущности
     for entity in req['request']['nlu']['entities']:
@@ -206,6 +234,24 @@ def get_first_name(req):
             # Если есть сущность с ключом 'first_name', то возвращаем её значение.
             # Во всех остальных случаях возвращаем None.
             return entity['value'].get('first_name', None)
+
+
+def get_country(city_name):
+    url = "https://geocode-maps.yandex.ru/1.x/"
+
+    params = {
+        'geocode': city_name,
+        'format': 'json',
+        'apikey': "40d1649f-0493-4b70-98ba-98533de7710b"
+    }
+
+    response = requests.get(url, params)
+    json = response.json()
+
+    return \
+        json['response']['GeoObjectCollection']['featureMember'][0]['GeoObject']['metaDataProperty'][
+            'GeocoderMetaData'][
+            'AddressDetails']['Country']['CountryName']
 
 
 if __name__ == '__main__':
