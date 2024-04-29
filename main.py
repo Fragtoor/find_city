@@ -47,7 +47,7 @@ def handle_dialog(res, req):
         if first_name is None:
             res['response']['text'] = 'Не расслышала имя. Повтори, пожалуйста!'
         else:
-            sessionStorage[user_id]['first_name'] = first_name
+            sessionStorage[user_id]['first_name'] = first_name.capitalize()
             # создаём пустой массив, в который будем записывать города, которые пользователь уже отгадал
             sessionStorage[user_id]['guessed_cities'] = []
             # как видно из предыдущего навыка, сюда мы попали, потому что пользователь написал своем имя.
@@ -123,7 +123,7 @@ def play_game(res, req):
         # добавляем в ответ картинку
         res['response']['card'] = {}
         res['response']['card']['type'] = 'BigImage'
-        res['response']['card']['title'] = 'Что это за город?'
+        res['response']['card']['title'] = f'Что это за город, {sessionStorage[user_id]["first_name"]}?'
         res['response']['card']['image_id'] = cities[city][attempt - 1]
         res['response']['text'] = f'Тогда сыграем, {sessionStorage[user_id]["first_name"]}!'
         res['response']['buttons'] = [{
@@ -195,7 +195,7 @@ def play_game(res, req):
                 # иначе показываем следующую картинку
                 res['response']['card'] = {}
                 res['response']['card']['type'] = 'BigImage'
-                res['response']['card']['title'] = 'Неправильно. Вот тебе дополнительное фото'
+                res['response']['card']['title'] = f'Неправильно. Вот тебе дополнительное фото, {sessionStorage[user_id]["first_name"]}'
                 res['response']['card']['image_id'] = cities[city][attempt - 1]
                 res['response']['text'] = f'{sessionStorage[user_id]["first_name"]}, а вот и не угадал!'
                 res['response']['buttons'] = [
